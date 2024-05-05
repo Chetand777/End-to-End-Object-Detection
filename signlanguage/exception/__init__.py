@@ -15,7 +15,7 @@ class SignException(Exception):
     """
     :param error message: error message in string format
     """
-    super.__init__(error_message)
+    super().__init__(error_message)
     self.error_message = error_msg_details(error_message, error_detail=error_detail)
 
   def __str__(self):
