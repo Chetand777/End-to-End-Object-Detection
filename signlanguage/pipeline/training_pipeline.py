@@ -8,9 +8,13 @@ from signlanguage.components.data_validation import DataValidation
 
 from signlanguage.components.model_trainer import ModelTrainer
 
-from signlanguage.entity.config_entity import (DataIngestionconfig, DataValidationConfig, ModelTrainerConfig)
+from signlanguage.components.model_pusher import ModelPusher
 
-from signlanguage.entity.artifacts_entity import (DataIngestionArtifact, DataValidationArtifact, ModelTrainerArtifact)
+from signlanguage.configuration.s3_operations import S3operation
+
+from signlanguage.entity.config_entity import (DataIngestionconfig, DataValidationConfig, ModelTrainerConfig, ModelPusherConfig)
+
+from signlanguage.entity.artifacts_entity import (DataIngestionArtifact, DataValidationArtifact, ModelTrainerArtifact, ModelPusherArtifact)
 
 
 class TrainingPipeline:
@@ -18,6 +22,8 @@ class TrainingPipeline:
     self.data_ingestion_config = DataIngestionconfig()
     self.data_validation_config = DataValidationConfig()
     self.model_trainer_config = ModelTrainerConfig()
+    self.model_pusher_config = ModelPusherConfig()
+    self.s3operation = S3operation()
     
 
   def start_data_ingestion(self) -> DataIngestionArtifact:
@@ -62,6 +68,23 @@ class TrainingPipeline:
     except Exception as e:
       raise SignException(e, sys)
     
+
+
+  def start_model_pusher(self, model_trainer_artifact: ModelTrainerArtifact,
+                         s3: S3operation):
+    
+    try:
+      model_pusher = ModelPusher(
+        model_pusher_config = self.model_pusher_config,
+        model_trainer_artifact = model_trainer_artifact,
+        s3 = s3,
+      )
+      model_pusher_artifact = model_pusher.initiate_model_pusher()
+      return model_pusher_artifact
+    
+    except Exception as e:
+      raise SignException(e, sys)
+    
   
 
     
@@ -72,6 +95,7 @@ class TrainingPipeline:
 
       if data_validation_artifact.validation_status == True:
         model_trainer_artifact = self.start_model_trainer()
+        model_pusher_artifact = self.start_model_pusher(model_trainer_artifact=model_trainer_artifact, s3=self.s3operation)
         
       else:
         raise Exception('Data is not in correct format')

@@ -29,3 +29,11 @@ MODEL_TRAINER_NO_EPOCHS: int = 1
 MODEL_TRAINER_BATCH_SIZE: int = 16
 
 
+
+"""
+Model Pusher constant start with MODEL PUSHER var name
+"""
+BUCKET_NAME = 'signlang24'
+S3_MODEL_NAME = 'best.pt'
+
+

@@ -40,18 +40,19 @@ class ModelTrainer:
       os.chdir('yolov5')
       os.system(train_command)
 
-      os.system('copy yolov5\\runs\\train\\yolov5s_results\\weights\\best.pt yolov5\\' 'yolov5\\')
+      os.system('copy yolov5\\runs\\train\\yolov5s_results\\weights\\best.pt yolov5\\')
+
 
       os.chdir('..')
 
       os.makedirs(self.model_trainer_config.model_trainer_dir, exist_ok=True)
 
-      shutil.copy(src='F:/Projects/End-to-End-Object-Detection/yolov5/runs/train/yolov5s_results/weights/best.pt', dst=f'{self.model_trainer_config.model_trainer_dir}\\')
+      shutil.copy(src='F:/Projects/End-to-End-Object-Detection/yolov5/runs/train/yolov5s_results/weights/best.pt', dst=f'{self.model_trainer_config.model_trainer_dir}/')
 
       
       shutil.rmtree('F:/Projects/End-to-End-Object-Detection/yolov5/runs')
 
-      model_trainer_artifact = ModelTrainerArtifact(trained_model_file_path='yolov5/best.pt')
+      model_trainer_artifact = ModelTrainerArtifact(trained_model_file_path='F:\\Projects\\End-to-End-Object-Detection\\artifacts\\05_10_2024_18_00_00\\model_trainer\\best.pt')
 
       logging.info('Exited initiate_model_trainer method of ModelTrainer class')
       logging.info(f'Model Trainer Artifact: {model_trainer_artifact}')
