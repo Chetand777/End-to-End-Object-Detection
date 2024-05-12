@@ -14,6 +14,12 @@ sudo usermod -aG docker $USER
 
 newgrp docker
 
+sudo apt update
+sudo apt install python3-venv
+python3 -m venv awscli-venv
+source awscli-venv/bin/activate
+pip install awscli
+
 sudo apt install awscli -y
 
 
