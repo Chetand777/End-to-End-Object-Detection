@@ -2,7 +2,7 @@
 
 sudo apt update
 
-sudo apt install open-jdk-8-jdk -y
+sudo apt install openjdk-8-jdk -y
 
 https://pkg.jenkins.io/
 https://pkg.jenkins.io/debian-stable/
@@ -27,6 +27,13 @@ sudo usermod -aG docker jenkins
 
 
 newgrp docker
+
+sudo apt update
+sudo apt install python3-venv
+python3 -m venv awscli-venv
+source awscli-venv/bin/activate
+pip install awscli
+
 
 sudo apt install awscli -y
 
