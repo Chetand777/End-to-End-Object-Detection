@@ -21,11 +21,19 @@ pipeline {
             }
         }
 
+        stage('Set Permissions') {
+            steps {
+                script {
+                    sh "chmod +x ${VENV_PATH}/bin/activate" // Ensure activate script has execute permissions
+                }
+            }
+        }
+
         stage('Login to ECR') {
             steps {
                 script {
                     // Activate the virtual environment and run AWS CLI commands
-                    sh "#!/bin/bash\n${VENV_PATH}/bin/activate && aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.ap-south-1.amazonaws.com && deactivate" // Corrected the ECR login command
+                    sh "#!/bin/bash\n. ${VENV_PATH}/bin/activate && aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.ap-south-1.amazonaws.com && deactivate" // Corrected the ECR login command
                 }
             }
         }
@@ -53,7 +61,7 @@ pipeline {
                 sshagent(['ssh_key']) {
                     script {
                         // Perform continuous deployment
-                        sh "ssh -o StrictHostKeyChecking=no -l ubuntu 13.235.235.214 'cd /home/ubuntu/ && wget https://github.com/Chetand777/End-to-End-Object-Detection/raw/main/docker-compose.yml && export IMAGE_NAME=${ECR_REPOSITORY}:latest && source ${VENV_PATH}/bin/activate && aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.ap-south-1.amazonaws.com && docker-compose up -d && deactivate'" // Corrected the Docker Compose command
+                        sh "ssh -o StrictHostKeyChecking=no -l ubuntu 13.235.235.214 'cd /home/ubuntu/ && wget https://github.com/Chetand777/End-to-End-Object-Detection/raw/main/docker-compose.yml && export IMAGE_NAME=${ECR_REPOSITORY}:latest && . ${VENV_PATH}/bin/activate && aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.ap-south-1.amazonaws.com && docker-compose up -d && deactivate'" // Corrected the Docker Compose command
                     }
                 }
             }
