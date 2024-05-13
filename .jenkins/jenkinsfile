@@ -44,6 +44,8 @@ pipeline {
         stage('Push Image') {
             steps {
                 script {
+                    // Login to Docker with the obtained credentials
+                    sh "docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.ap-south-1.amazonaws.com < /dev/null"
                     // Push the Docker image to ECR
                     sh "docker push ${ECR_REPOSITORY}:latest" // Changed single quotes to double quotes to allow variable interpolation
                 }
