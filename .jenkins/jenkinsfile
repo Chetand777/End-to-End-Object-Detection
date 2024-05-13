@@ -23,9 +23,11 @@ pipeline {
 
         stage('Login to ECR') {
             steps {
+                input(message: 'Enter your password', parameters: [password(defaultValue: '', description: 'Password', name: 'PASSWORD')])
+
                 script {
                     // Activate the virtual environment and run AWS CLI commands
-                    sh "sudo -u ubuntu -g ubuntu . ${VENV_PATH}/bin/activate && aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.ap-south-1.amazonaws.com && deactivate" // Corrected the ECR login command
+                    sh ". ${VENV_PATH}/bin/activate && aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.ap-south-1.amazonaws.com && deactivate" // Corrected the ECR login command
                 }
             }
         }
