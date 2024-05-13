@@ -23,13 +23,11 @@ pipeline {
 
         stage('Login to ECR') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'AWS_ACCOUNT_ID', passwordVariable: 'PASSWORD', usernameVariable: 'USERNAME')]) {
-                    input(message: 'Enter your AWS ECR password', parameters: [password(defaultValue: '', description: 'Password', name: 'PASSWORD')])
+                input(message: 'Enter your password', parameters: [password(defaultValue: '', description: 'Password', name: 'PASSWORD')])
 
-                    script {
-                        // Activate the virtual environment and run AWS CLI commands
-                        sh ". ${VENV_PATH}/bin/activate && echo $PASSWORD | aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.ap-south-1.amazonaws.com && deactivate" // Corrected the ECR login command
-                    }
+                script {
+                    // Activate the virtual environment and run AWS CLI commands
+                    sh ". ${VENV_PATH}/bin/activate && aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.ap-south-1.amazonaws.com && deactivate" // Corrected the ECR login command
                 }
             }
         }
@@ -57,7 +55,7 @@ pipeline {
                 sshagent(['ssh_key']) {
                     script {
                         // Perform continuous deployment
-                        sh "ssh -o StrictHostKeyChecking=no -l ubuntu 13.235.235.214 'cd /home/ubuntu/ && wget https://github.com/Chetand777/End-to-End-Object-Detection/raw/main/docker-compose.yml && export IMAGE_NAME=${ECR_REPOSITORY}:latest && source ${VENV_PATH}/bin/activate && echo $PASSWORD | aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.ap-south-1.amazonaws.com && docker-compose up -d && deactivate'" // Corrected the Docker Compose command
+                        sh "ssh -o StrictHostKeyChecking=no -l ubuntu 13.235.235.214 'cd /home/ubuntu/ && wget https://github.com/Chetand777/End-to-End-Object-Detection/raw/main/docker-compose.yml && export IMAGE_NAME=${ECR_REPOSITORY}:latest && source ${VENV_PATH}/bin/activate && aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.ap-south-1.amazonaws.com && docker-compose up -d && deactivate'" // Corrected the Docker Compose command
                     }
                 }
             }
