@@ -44,10 +44,14 @@ pipeline {
         stage('Push Image') {
             steps {
                 script {
-                    // Login to Docker with the obtained credentials
-                    sh "docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.ap-south-1.amazonaws.com < /dev/null"
+                    // Obtain the ECR login password using the AWS CLI
+                    def ecrPassword = sh(script: "aws ecr get-login-password --region ap-south-1", returnStdout: true).trim()
+            
+                    // Login to Docker with the obtained password
+                    sh "echo '${ecrPassword}' | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.ap-south-1.amazonaws.com"
+            
                     // Push the Docker image to ECR
-                    sh "docker push ${ECR_REPOSITORY}:latest" // Changed single quotes to double quotes to allow variable interpolation
+                    sh "docker push ${ECR_REPOSITORY}:latest"
                 }
             }
         }
