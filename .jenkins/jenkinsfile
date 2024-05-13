@@ -7,7 +7,7 @@ pipeline {
         AWS_ACCOUNT_ID = credentials('AWS_ACCOUNT_ID')
         AWS_ACCESS_KEY_ID = credentials('AWS_ACCESS_KEY_ID')
         AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
-        VENV_PATH = '/home/ubuntu/awscli-venv' // Corrected path to the virtual environment
+        // VENV_PATH = '/home/ubuntu/awscli-venv' // Corrected path to the virtual environment
     }
 
     stages {
@@ -23,11 +23,12 @@ pipeline {
 
         stage('Login to ECR') {
             steps {
-                input(message: 'Enter your password', parameters: [password(defaultValue: '', description: 'Password', name: 'PASSWORD')])
-
                 script {
-                    // Activate the virtual environment and run AWS CLI commands
-                    sh ". ${VENV_PATH}/bin/activate && aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.ap-south-1.amazonaws.com && deactivate" // Corrected the ECR login command
+                    // Obtain the ECR login password using the AWS CLI
+                    def ecrPassword = sh(script: "aws ecr get-login-password --region ap-south-1", returnStdout: true)
+
+                    // Login to Docker with the obtained password
+                    sh "echo '${ecrPassword}' | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.ap-south-1.amazonaws.com"
                 }
             }
         }
@@ -44,12 +45,6 @@ pipeline {
         stage('Push Image') {
             steps {
                 script {
-                    // Obtain the ECR login password using the AWS CLI
-                    def ecrPassword = sh(script: "aws ecr get-login-password --region ap-south-1", returnStdout: true).trim()
-            
-                    // Login to Docker with the obtained password
-                    sh "echo '${ecrPassword}' | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.ap-south-1.amazonaws.com"
-            
                     // Push the Docker image to ECR
                     sh "docker push ${ECR_REPOSITORY}:latest"
                 }
@@ -61,7 +56,8 @@ pipeline {
                 sshagent(['ssh_key']) {
                     script {
                         // Perform continuous deployment
-                        sh "ssh -o StrictHostKeyChecking=no -l ubuntu 13.235.235.214 'cd /home/ubuntu/ && wget https://github.com/Chetand777/End-to-End-Object-Detection/raw/main/docker-compose.yml && export IMAGE_NAME=${ECR_REPOSITORY}:latest && source ${VENV_PATH}/bin/activate && aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.ap-south-1.amazonaws.com && docker-compose up -d && deactivate'" // Corrected the Docker Compose command
+                        sh "ssh -o StrictHostKeyChecking=no -l ubuntu 13.235.235.214 'cd /home/ubuntu/ && wget https://github.com/Chetand777/End-to-End-Object-Detection/raw/main/docker-compose.yml && export IMAGE_NAME=${ECR_REPOSITORY}:latest && aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.ap-south-1.amazonaws.com && docker-compose up -d'"
+
                     }
                 }
             }
