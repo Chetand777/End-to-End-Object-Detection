@@ -7,14 +7,14 @@ pipeline {
         AWS_ACCOUNT_ID = credentials('AWS_ACCOUNT_ID')
         AWS_ACCESS_KEY_ID = credentials('AWS_ACCESS_KEY_ID')
         AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
-        // VENV_PATH = '/home/ubuntu/awscli-venv' // Corrected path to the virtual environment
+        VENV_PATH = '/home/ubuntu/awscli-venv/bin/activate'
     }
 
     stages {
         stage('Continuous Integration') {
             steps {
                 script {
-                    // Perform linting and unit tests
+                    // Perform linting repository and running unit tests
                     echo "Linting repository"
                     echo "Running unit tests"
                 }
@@ -24,11 +24,8 @@ pipeline {
         stage('Login to ECR') {
             steps {
                 script {
-                    // Obtain the ECR login password using the AWS CLI
-                    def ecrPassword = sh(script: "aws ecr get-login-password --region ap-south-1", returnStdout: true)
-
-                    // Login to Docker with the obtained password
-                    sh "echo '${ecrPassword}' | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.ap-south-1.amazonaws.com"
+                    // Activate the virtual environment and login to ECR registry
+                    sh ". ${VENV_PATH} && aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.ap-south-1.amazonaws.com"
                 }
             }
         }
@@ -36,8 +33,8 @@ pipeline {
         stage('Build Image') {
             steps {
                 script {
-                    // Build the Docker image
-                    sh "docker build -t ${ECR_REPOSITORY}:latest ." // Changed single quotes to double quotes to allow variable interpolation
+                    // Activate the virtual environment and build the Docker image
+                    sh ". ${VENV_PATH} && docker build -t ${ECR_REPOSITORY}:latest ."
                 }
             }
         }
@@ -45,8 +42,8 @@ pipeline {
         stage('Push Image') {
             steps {
                 script {
-                    // Push the Docker image to ECR
-                    sh "docker push ${ECR_REPOSITORY}:latest"
+                    // Activate the virtual environment and push the Docker image to ECR
+                    sh ". ${VENV_PATH} && docker push ${ECR_REPOSITORY}:latest"
                 }
             }
         }
@@ -55,9 +52,8 @@ pipeline {
             steps {
                 sshagent(['ssh_key']) {
                     script {
-                        // Perform continuous deployment
-                        sh "ssh -o StrictHostKeyChecking=no -l ubuntu 13.235.235.214 'cd /home/ubuntu/ && wget https://github.com/Chetand777/End-to-End-Object-Detection/raw/main/docker-compose.yml && export IMAGE_NAME=${ECR_REPOSITORY}:latest && aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.ap-south-1.amazonaws.com && docker-compose up -d'"
-
+                        // Activate the virtual environment and perform continuous deployment
+                        sh "ssh -o StrictHostKeyChecking=no -l ubuntu 13.235.235.214 'cd /home/ubuntu/ && wget https://github.com/Chetand777/End-to-End-Object-Detection/raw/main/docker-compose.yml && export IMAGE_NAME=${ECR_REPOSITORY}:latest && . ${VENV_PATH} && aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.ap-south-1.amazonaws.com && docker compose up -d'"
                     }
                 }
             }
